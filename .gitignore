@@ -1,0 +1,11 @@
+/.idea
+/builds
+/*.iml
+/flac-mate
+/coverage.*
+
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
