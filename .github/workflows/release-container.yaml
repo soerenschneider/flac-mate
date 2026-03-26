@@ -42,7 +42,7 @@ jobs:
 
       - name: Extract metadata for container
         id: meta
-        uses: docker/metadata-action@v5.10.0
+        uses: docker/metadata-action@v6.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -50,7 +50,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Build and push container image
-        uses: docker/build-push-action@v6.19.2
+        uses: docker/build-push-action@v7.0.0
         with:
           context: .
           push: true
