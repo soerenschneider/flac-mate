@@ -112,9 +112,13 @@ func runRenamer(cmd *cobra.Command, args []string) error {
 				errs = multierr.Append(errs, err)
 			}
 		} else {
-			successStyle := lipgloss.NewStyle().
-				Bold(true)
-			fmt.Println(successStyle.Render("✓ No renaming needed!"))
+			if action.EncounteredErrors() {
+				//return action.Errors
+				errs = multierr.Append(errs, action.Errors)
+			} else {
+				successStyle := lipgloss.NewStyle().Bold(true)
+				fmt.Println(successStyle.Render("✓ No renaming needed!"))
+			}
 		}
 
 		if action.EncounteredErrors() {
@@ -131,7 +135,7 @@ type renameAction struct {
 	FileActions    map[string]string
 	DirAction      [2]string // [old, new]
 	ImageAction    [2]string // [old, new]
-	Errors         []error
+	Errors         error
 	hasDirAction   bool
 	hasImageAction bool
 }
@@ -141,13 +145,15 @@ func NewAction(directory string) *renameAction {
 	return &renameAction{
 		Dir:         directory,
 		FileActions: make(map[string]string),
-		Errors:      make([]error, 0),
 	}
 }
 
 // AddError adds an error to the action
 func (a *renameAction) AddError(err error) {
-	a.Errors = append(a.Errors, err)
+	if err == nil {
+		return
+	}
+	a.Errors = multierr.Append(a.Errors, err)
 }
 
 // AddFileAction adds an action to rename a file
@@ -172,7 +178,7 @@ func (a *renameAction) Actionable() bool {
 }
 
 func (a *renameAction) EncounteredErrors() bool {
-	return len(a.Errors) > 0
+	return a.Errors != nil
 }
 
 // CarryOut actually performs the operations
@@ -321,18 +327,18 @@ func appendMetadata(albumMetadata map[string]map[string]bool, fileMetadata map[s
 // canRenameDirectory decides if directory can be renamed based on metadata
 func canRenameDirectory(metadata map[string]map[string]bool, scheme string) (bool, error) {
 	if len(metadata) == 0 {
-		return false, errors.New("empty metadata")
+		return false, internal.ErrIncompleteMetadata
 	}
 
 	// find tags with multiple values
 	var multiValuedTags []string
 	for _, tag := range flagMetaUniformTags {
-		if metadata[tag] != nil && len(metadata[tag]) > 1 {
+		if len(metadata[tag]) > 1 {
 			multiValuedTags = append(multiValuedTags, tag)
 		}
 	}
 	if len(multiValuedTags) > 0 {
-		return false, fmt.Errorf("found multi-valued tags %v", multiValuedTags)
+		return false, fmt.Errorf("f%w: %v", internal.ErrMultiValuedTags, multiValuedTags)
 	}
 
 	re := regexp.MustCompile(`\((\w+)\)`)
@@ -414,7 +420,7 @@ func workDir(dirname string, filenames []string, fileScheme, dirScheme, coverNam
 			var err error
 			fileMetadata, err = internal.FetchMetadata(filepath, nil, false)
 			if err != nil {
-				action.AddError(fmt.Errorf("error fetching metadata for %s: %v", filename, err))
+				action.AddError(internal.ErrIncompleteMetadata)
 				continue
 			}
 
@@ -442,7 +448,7 @@ func workDir(dirname string, filenames []string, fileScheme, dirScheme, coverNam
 		// Handle directory renaming
 		canRenameDir, err := canRenameDirectory(albumMetadata, dirScheme)
 		if err != nil {
-			action.AddError(err)
+			action.AddError(fmt.Errorf("%w: %s", err, filepath.Base(dirname)))
 		} else if canRenameDir && fileMetadata != nil {
 			// Convert albumMetadata to single-value metadata for directory naming
 			singleMetadata := make(map[string]string)
