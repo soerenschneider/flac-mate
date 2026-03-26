@@ -54,7 +54,7 @@ func init() {
 func runRenamer(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true
 
-	target := args[0]
+	target := pkg.GetExpandedFile(args[0])
 
 	fileScheme, err := unwrapKeys(flagRenameScheme, false)
 	if err != nil {
