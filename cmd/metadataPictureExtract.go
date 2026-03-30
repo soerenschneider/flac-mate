@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/soerenschneider/flac-mate/internal/tui"
 	"github.com/soerenschneider/flac-mate/pkg"
 	"github.com/spf13/cobra"
 	"go.uber.org/multierr"
@@ -78,7 +79,7 @@ func runMetaPictureExtract(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := extractCoverForDir(dirname, filenames); err != nil {
-			fmt.Println(err)
+			tui.Error(fmt.Sprintf("could not extract cover for dir %q: %v", dirname, err))
 		}
 	}
 
@@ -107,6 +108,7 @@ func extractCoverForDir(basedir string, filenames []string) error {
 	// Handle cover image renaming
 	cover, err := pkg.GetMainCover(basedir, collectedImages)
 	if cover != "" && err == nil {
+		tui.Info(fmt.Sprintf("%q already has a cover defined: %s", basedir, cover))
 		return err
 	}
 
