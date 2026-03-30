@@ -365,8 +365,8 @@ func canRenameDirectory(metadata map[string]map[string]bool, scheme string) (boo
 }
 
 func renameCover(dirname string, images []string, coverName string) (string, string, bool) {
-	selectedImage := pkg.GetMainCover(dirname, images)
-	if selectedImage == "" {
+	selectedImage, err := pkg.GetMainCover(dirname, images)
+	if selectedImage == "" || err != nil {
 		return "", "", false
 	}
 
