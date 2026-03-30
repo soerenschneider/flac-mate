@@ -95,7 +95,7 @@ func extractCoverForDir(basedir string, filenames []string) error {
 	for _, filename := range filenames {
 		if strings.HasSuffix(strings.ToLower(filename), ".flac") {
 			flacFiles = append(flacFiles, filename)
-		} else if isImage(filename) {
+		} else if isImage(filepath.Join(basedir, filename)) {
 			collectedImages = append(collectedImages, filename)
 		}
 	}
@@ -103,6 +103,7 @@ func extractCoverForDir(basedir string, filenames []string) error {
 	if len(flacFiles) == 0 {
 		return nil // not a music dir
 	}
+
 	// Handle cover image renaming
 	cover, err := pkg.GetMainCover(basedir, collectedImages)
 	if cover != "" && err == nil {
