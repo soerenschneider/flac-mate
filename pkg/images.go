@@ -105,7 +105,9 @@ func IsNearlySquare(path string, tolerance float64) bool {
 	if err != nil {
 		return false
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	cfg, _, err := image.DecodeConfig(f)
 	if err != nil {
