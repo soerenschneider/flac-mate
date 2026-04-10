@@ -10,7 +10,7 @@ require (
 	github.com/rs/zerolog v1.35.0
 	github.com/spf13/cobra v1.10.2
 	go.uber.org/multierr v1.11.0
-	golang.org/x/term v0.41.0
+	golang.org/x/term v0.42.0
 )
 
 require (
